@@ -134,3 +134,96 @@ class Player(pygame.sprite.Sprite):
 
     def kill(self):
         self.image = f
+
+
+class Asteroid(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(asteroid_group, all_sprites)
+        self.image = asteroid_image
+        self.maxspeed = 8
+        self.minspeed = 1
+        self.maxsize = 40
+        self.minsize = 20
+
+    def generate(self):
+        self.size = random.randint(self.minsize, self.maxsize)
+        self.rect = pygame.Rect(random.randint(0, width - self.size), 0, self.size, self.size)
+        self.speed = random.randint(self.minspeed, self.maxspeed)
+        self.image = pygame.transform.scale(asteroid_image, (self.size, self.size))
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        global work
+        if not pygame.sprite.collide_mask(self, player):
+            self.rect.move_ip(0, self.speed)
+        else:
+            player.kill()
+            work = False
+
+
+start_screen()
+
+gameover = pygame.mixer.Sound(os.path.join('data', 'game_over.wav'))
+pygame.mixer.music.load(os.path.join('data', 'main_teme.mp3'))
+pygame.mixer.music.play(0, 0.0)
+player = Player()
+work = True
+font = pygame.font.Font(None, 30)
+score = 0
+topScore = 0
+
+while True:
+    asteroids = []
+    moveLeft = moveRight = moveUp = moveDown = speed_up = False
+    recharge = False
+    start_time = pygame.time.get_ticks()
+    asteroidsAddCounter = 0
+    while work:
+        score += 1
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                work = False
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT or event.key == K_a:
+                    moveRight = False
+                    moveLeft = True
+
+                if event.key == K_RIGHT or event.key == K_d:
+                    moveLeft = False
+                    moveRight = True
+
+                if event.key == K_DOWN or event.key == K_s:
+                    moveUp = False
+                    moveDown = True
+
+                if event.key == K_UP or event.key == K_w:
+                    moveDown = False
+                    moveUp = True
+
+                if event.key == K_LCTRL and not recharge:
+                    speedtime = pygame.time.get_ticks()
+                    speed_up = True
+
+            if event.type == KEYUP:
+                if event.key == K_ESCAPE:
+                    terminate()
+
+                if event.key == K_LEFT or event.key == K_a:
+                    moveLeft = False
+
+                if event.key == K_RIGHT or event.key == K_d:
+                    moveRight = False
+
+                if event.key == K_UP or event.key == K_w:
+                    moveUp = False
+
+                if event.key == K_DOWN or event.key == K_s:
+                    moveDown = False
+
+        asteroidsAddCounter += 1
+        if asteroidsAddCounter >= new_asteroid_tick:
+            asteroidsAddCounter = 0
+            asteroid = Asteroid()
+            asteroid.generate()
+            asteroids.append(asteroid)

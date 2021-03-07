@@ -227,3 +227,64 @@ while True:
             asteroid = Asteroid()
             asteroid.generate()
             asteroids.append(asteroid)
+
+        if moveLeft and player.rect.left > 0:
+            player.rect.move_ip(-1 * player.speed, 0)
+        if moveRight and player.rect.right < width:
+            player.rect.move_ip(player.speed, 0)
+        if moveUp and player.rect.top > 0:
+            player.rect.move_ip(0, -1 * player.speed)
+        if moveDown and player.rect.bottom < height:
+            player.rect.move_ip(0, player.speed)
+
+        for a in asteroids:
+            a.update()
+
+        for a in asteroids[:]:
+            if a.rect.top > height:
+                asteroids.remove(a)
+
+        if speed_up:
+            if pygame.time.get_ticks() - speedtime <= 5000:
+                player.speed_up()
+            else:
+                speed_up = False
+                player.speed_down()
+                recharge = True
+                rechargetime = pygame.time.get_ticks()
+
+        screen.blit(load_image('background.png'), load_image('background.png').get_rect())
+
+        if recharge:
+            if pygame.time.get_ticks() - rechargetime <= 10000:
+                write_Text('До перезарядки: %s' % ((10000 - pygame.time.get_ticks() + rechargetime) // 1000 + 1), font, screen, width / 2, 0)
+            else:
+                rechargetime = 600
+                recharge = False
+
+        write_Text('Счёт: %s' % (score), font, screen, 10, 0)
+        write_Text('Рекорд: %s' % (topScore), font, screen, 10, 40)
+
+        screen.blit(player.image, player.rect)
+
+        for a in asteroids:
+            screen.blit(a.image, a.rect)
+
+
+        pygame.display.flip()
+        clock.tick(fps)
+
+    pygame.mixer.music.stop()
+    gameover.play()
+    text = font.render("ИГРА ОКОНЧЕНА!", True, (100, 255, 100))
+    text_x = width // 3
+    text_y = height // 3
+    text_w = text.get_width()
+    text_h = text.get_height()
+    screen.blit(text, (text_x, text_y))
+    pygame.draw.rect(screen, (0, 255, 0), (text_x - 10, text_y - 10,
+                                           text_w + 20, text_h + 20), 1)
+    
+    pygame.display.flip()
+    Key()
+    gameover.stop()
